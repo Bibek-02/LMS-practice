@@ -8,5 +8,4 @@ const bookSchema = new mongoose.Schema({
     added_on: {type: Date, default: Date.now}   
 });
 
-// model lets us create, read, update, and delete records of that schema
 export default mongoose.model("Book", bookSchema);

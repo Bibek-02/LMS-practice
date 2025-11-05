@@ -31,10 +31,45 @@ export const createBook = async (req, res, next) => {
         }
         next(err);
     }
+}; 
+
+//** GET /api/books */
+export const getBooks = async (req, res, next) => {
+  try {
+    const url = new URL(req.originalUrl || req.url, `http://${req.headers.host}`);
+
+    const q       = url.searchParams.get("q")?.trim() || "";
+    const page    = parseInt(url.searchParams.get("page") || "1", 10);
+    const limit   = parseInt(url.searchParams.get("limit") || "10", 10);
+    const safePage  = Math.max(1, page);
+    const safeLimit = Math.min(50, Math.max(1, limit));
+    const skip    = (safePage - 1) * safeLimit;
+
+    const filter = q
+      ? {
+          $or: [
+            { title:  new RegExp(q, "i") },
+            { author: new RegExp(q, "i") }
+          ]
+        }
+      : {};
+
+   
+    const [items, total] = await Promise.all([
+      Book.find(filter)
+        .sort({ added_on: -1 }) 
+        .skip(skip)
+        .limit(safeLimit)
+        .lean(),
+      Book.countDocuments(filter)
+    ]);
+
+   
+    return ok(res, { items, page: safePage, limit: safeLimit, total }, "Books fetched successfully");
+  } catch (err) {
+    next(err);
+  }
 };
-
-
-
 
 
 /** GET /api/books/:id */

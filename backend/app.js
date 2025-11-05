@@ -5,19 +5,11 @@ import bookRoutes from "./src/routes/book.routes.js";
 import notFound from "./src/middleware/notFound.js";
 import errorHandler from "./src/middleware/errorHandler.js";
 
-console.log(">> app.js loaded"); // <— should print on start
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
-
-// quick ping
-app.get("/__ping", (req, res) => {
-  console.log(">> /__ping hit");
-  res.send("pong");
-});
 
 // health
 app.get("/health", (req, res) => {
@@ -26,10 +18,12 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/books", bookRoutes);
+console.log("hello after book");
 app.use(notFound);
 app.use(errorHandler);
 
-// list direct routes (temporary)
+
+// list direct routes 
 const routes = [];
 app._router?.stack?.forEach((layer) => {
   if (layer.route?.path) {
