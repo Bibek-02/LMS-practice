@@ -1,8 +1,8 @@
-import moongoose from 'mongoose';
+import mongoose from 'mongoose';
 import Book from '../models/bookModel.js';
 import {ok, fail} from '../utils/apiResponse.js';
 
-const isId = (id) => moongoose.Types.ObjectId.isValid(id);
+const isId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 /** POST /api/books */
 export const createBook = async (req, res, next) => {
