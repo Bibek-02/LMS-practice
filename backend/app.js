@@ -2,6 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import bookRoutes from "./src/routes/book.routes.js";
+import memberRoutes from "./src/routes/member.routes.js";
 import notFound from "./src/middleware/notFound.js";
 import errorHandler from "./src/middleware/errorHandler.js";
 
@@ -18,7 +19,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/books", bookRoutes);
-console.log("hello after book");
+app.use("/api/members", memberRoutes);
 app.use(notFound);
 app.use(errorHandler);
 

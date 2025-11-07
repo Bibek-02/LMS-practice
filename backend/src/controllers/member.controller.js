@@ -43,3 +43,40 @@ export const createMember = async(req, res, next) => {
     }
 }
 
+/** GET /api/members */
+export const getMembers = async (req, res, next) => {
+  try {
+    const url = new URL(req.originalUrl || req.url, `http://${req.headers.host}`);
+
+    const q         = url.searchParams.get("q")?.trim() || "";
+    const page      = parseInt(url.searchParams.get("page") || "1", 10);
+    const limit     = parseInt(url.searchParams.get("limit") || "10", 10);
+    const safePage  = Math.max(1, page);
+    const safeLimit = Math.min(50, Math.max(1, limit));
+    const skip      = (safePage - 1) * safeLimit;
+
+    const filter = q
+      ? {
+          $or: [
+            { name:  new RegExp(q, "i") },
+            { email: new RegExp(q, "i") }
+          ]
+        }
+      : {};
+
+    const [items, total] = await Promise.all([
+      Member.find(filter)
+        .sort({ member_since: -1 })   
+        .skip(skip)
+        .limit(safeLimit)
+        .lean(),
+      Member.countDocuments(filter)
+    ]);
+
+    const safeItems = items.map(({ _id, __v, password, ...rest }) => ({ id: String(_id), ...rest }));
+
+    return ok(res, { items: safeItems, page: safePage, limit: safeLimit, total }, "Members fetched successfully");
+  } catch (err) {
+    next(err);
+  }
+};

@@ -1,5 +1,4 @@
-
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const memberSchema = new mongoose.Schema(
     {
@@ -34,7 +33,7 @@ const memberSchema = new mongoose.Schema(
         type: String,
         required: [true, 'Password is required'],
         minlength: [8, 'Password must be at least 8 characters'],
-        select: false // hides by default in queries
+        select: false 
         },
 
         member_since: {
@@ -62,4 +61,4 @@ const memberSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model('Member', memberSchema);
+export default mongoose.model("Member", memberSchema);
