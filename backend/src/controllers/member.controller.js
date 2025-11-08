@@ -80,3 +80,105 @@ export const getMembers = async (req, res, next) => {
     next(err);
   }
 };
+
+/** GET /api/members/:id */
+export const getMemberBYId = async(req, res, next) => {
+  try {
+    const {id} = req.params;
+    if(!isId(id)) 
+      return fail(res, "Invalid member id", 400);
+
+    const member = await Member.findById(id).lean();
+    if (!member)
+      return fail(res, "Memeber not found", 404)
+
+    const {_id, __v, password, ...rest} = member;
+    const safe = {id: String(_id), ...rest};
+    return ok(res, safe, "Member fetched sucessfully");
+  }catch(err){
+    next(err);
+  }
+};
+
+
+/** PUT /api/members/:id */
+export const updateMember = async (req, res, next) => {
+  try{
+    const { id } = req.params;
+    if (!isId(id))
+      return fail (res, ("Invalid member id", 400));
+
+    if ('password' in req.body) {
+      return fail(res, "Use auth endpoint to change password", 400, {fields: ["password"]});
+    }
+    
+    // Build payload from allowed field only.
+    const allowed = ["name", "email", "address", "member_since", "expiry_date","notes"];
+    const payload = {};
+    for(const key of allowed) {
+      if(req.body[key] !== undefined) payload[key] = req.body[key];
+    }
+
+    //Validate 
+    if ("name" in payload && !payload.name?.trim())
+      return fail(res, "name must not be empty", 422, {fields: ["name"]});
+    if ("email" in payload && !payload.email?.trim())
+      return fail(res, "email must not be empty", 422, {fields:["email"]});
+
+    //Normalize
+    if ("name" in payload) payload.name = payload.name.trim();
+    if ("email" in payload) payload.email = payload.email.trim().toLowerCase();
+
+    if("email" in payload) {
+      const exists = await Member.findOne({email: payload.email, _id:{$ne: id}}).lean();
+      if (exists) 
+        return fail(res, "Email is already registered", 409, {fields:["email"]})
+    }
+
+    const updated = await Member.findByIdAndUpdate(
+      id, 
+      payload,
+      {new: true, runValidators: true, context: "query"}
+    ).lean();
+
+    if(!updated) return fail(res, "Member not found", 404);
+
+    const{_id, __v, password, ...rest} = updated;
+    const safe = {id: String(_id), ...rest};
+
+    return ok (res, safe, "Member updated successfully");
+  } catch(err){
+    if(err?.code === 11000 && err?.keyPattern?.email) {
+      err.status = 409;
+      err.message = "Email already exists";
+    }
+    next(err);
+  }
+}
+
+/** DELETE /api/members/:id  (?hard=true for hard delete) */
+export const deleteMember = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isId(id)) return fail(res, "Invalid member id", 400);
+
+    const hard = String(req.query.hard || 'false').toLowerCase() === 'true';
+
+    let result;
+    if (hard) {
+      result = await Member.findByIdAndDelete(id).lean();
+      if (!result) return fail(res, "Member not found", 404);
+      return ok(res, { id: String(result._id), hardDeleted: true }, "Member hard-deleted successfully");
+    } else {
+      result = await Member.findByIdAndUpdate(
+        id,
+        { $set: { active: false } },
+        { new: true }
+      ).lean();
+      if (!result) return fail(res, "Member not found", 404);
+      return ok(res, { id: String(result._id), hardDeleted: false }, "Member deactivated successfully");
+    }
+  } catch (err) {
+    next(err);
+  }
+};
