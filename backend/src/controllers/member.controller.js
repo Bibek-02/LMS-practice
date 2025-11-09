@@ -1,3 +1,4 @@
+// src/controllers/member.controller.js
 import mongoose from 'mongoose';
 import Member from '../models/memberModel.js';
 import {ok, fail} from '../utils/apiResponse.js';
@@ -17,11 +18,13 @@ export const createMember = async(req, res, next) => {
         if(exists)
             return fail(res, "Email is already registered", 409, {fields: ["email"]});
 
+        const password_hash = await hashPassword(password);
+
         const member = await Member.create({
             name: name.trim(),
             email: email.trim().toLowerCase(),
             address, 
-            password,
+            password_hash,
             member_since,
             expiry_date,
             active, 
@@ -30,7 +33,7 @@ export const createMember = async(req, res, next) => {
 
         //Ensuring password never leaks
         const doc = member.toObject ? member.toObject() : member;
-        const{ password: _pw, __v, _id, ...rest} = doc;
+        const{ password_hash: _pw, __v, _id, ...rest} = doc;
         const safe = { id: String(_id), ...rest};
 
         return ok(res, safe, "Member created succesfully", 201);
@@ -73,7 +76,7 @@ export const getMembers = async (req, res, next) => {
       Member.countDocuments(filter)
     ]);
 
-    const safeItems = items.map(({ _id, __v, password, ...rest }) => ({ id: String(_id), ...rest }));
+    const safeItems = items.map(({ _id, __v, password_hash, password, ...rest }) => ({ id: String(_id), ...rest }));
 
     return ok(res, { items: safeItems, page: safePage, limit: safeLimit, total }, "Members fetched successfully");
   } catch (err) {
@@ -82,7 +85,7 @@ export const getMembers = async (req, res, next) => {
 };
 
 /** GET /api/members/:id */
-export const getMemberBYId = async(req, res, next) => {
+export const getMemberById = async(req, res, next) => {
   try {
     const {id} = req.params;
     if(!isId(id)) 
@@ -90,11 +93,11 @@ export const getMemberBYId = async(req, res, next) => {
 
     const member = await Member.findById(id).lean();
     if (!member)
-      return fail(res, "Memeber not found", 404)
+      return fail(res, "Member not found", 404)
 
-    const {_id, __v, password, ...rest} = member;
+    const {_id, __v, password_hash, password, ...rest} = member;
     const safe = {id: String(_id), ...rest};
-    return ok(res, safe, "Member fetched sucessfully");
+    return ok(res, safe, "Member fetched successfully");
   }catch(err){
     next(err);
   }
@@ -106,7 +109,7 @@ export const updateMember = async (req, res, next) => {
   try{
     const { id } = req.params;
     if (!isId(id))
-      return fail (res, ("Invalid member id", 400));
+      return fail (res, "Invalid member id", 400);
 
     if ('password' in req.body) {
       return fail(res, "Use auth endpoint to change password", 400, {fields: ["password"]});

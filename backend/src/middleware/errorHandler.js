@@ -1,3 +1,4 @@
+// src/middleware/errorHandler.js   
 export default function errorHandler(err, req, res, next) {
     console.error("ERROR:", err);
     const status = err.status || 500;

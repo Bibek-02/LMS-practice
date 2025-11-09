@@ -1,3 +1,4 @@
+ // src/models/memberModel.js      
 import mongoose from "mongoose";
 
 const memberSchema = new mongoose.Schema(

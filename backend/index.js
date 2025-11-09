@@ -1,3 +1,4 @@
+// backend/index.js 
 import dotenv from 'dotenv';
 import mongoose from 'mongoose'; 
 import app from './app.js'; 

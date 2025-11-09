@@ -1,3 +1,4 @@
+// backend/app.js
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
@@ -5,6 +6,8 @@ import bookRoutes from "./src/routes/book.routes.js";
 import memberRoutes from "./src/routes/member.routes.js";
 import notFound from "./src/middleware/notFound.js";
 import errorHandler from "./src/middleware/errorHandler.js";
+import memberAuthRoutes from "./src/routes/auth.member.routes.js";
+import staffAuthRoutes from "./src/routes/auth.staff.routes.js";
 
 const app = express();
 app.use(cors());
@@ -20,6 +23,8 @@ app.get("/health", (req, res) => {
 
 app.use("/api/books", bookRoutes);
 app.use("/api/members", memberRoutes);
+app.use("/api/auth/member", memberAuthRoutes);
+app.use("/api/auth/staff", staffAuthRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
