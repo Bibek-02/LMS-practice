@@ -30,9 +30,9 @@ const memberSchema = new mongoose.Schema(
         default: ''
         },
 
-        password: {
+        password_hash: {
         type: String,
-        required: [true, 'Password is required'],
+        required: [true, 'Password hash is required'],
         minlength: [8, 'Password must be at least 8 characters'],
         select: false 
         },

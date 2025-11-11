@@ -2,31 +2,56 @@
 import { Router } from "express";
 import { requireMemberAuth } from "../middleware/authMember.js";
 import { requireStaffAuth } from "../middleware/authStaff.js";
+import { authorize } from "../middleware/authorize.js";
 import {
   createMember,
   getMembers,
-  getMemberById,   
+  getMemberById,
   updateMember,
   deleteMember,
 } from "../controllers/member.controller.js";
 
 const router = Router();
 
-// Member self-check (member token)
+/**
+ * Member self-check (like profile endpoint)
+ * GET /api/members/me
+ */
 router.get("/me", requireMemberAuth, (req, res) =>
-  res.json({ status: "success", message: "OK", data: { user: req.user } })
+  res.json({
+    status: "success",
+    message: "OK",
+    data: { user: req.user },
+  })
 );
 
-// Staff/Admin only beyond this line
+/**
+ * Public/member routes
+ * - Member can read/update their own profile only
+ */
+router
+  .route("/:id")
+  .get(
+    requireMemberAuth,
+    authorize(["member", "staff", "admin"], { ownership: true }),
+    getMemberById
+  )
+  .put(
+    requireMemberAuth,
+    authorize(["member", "staff", "admin"], { ownership: true }),
+    updateMember
+  );
+
+/**
+ * Staff/Admin routes
+ */
 router
   .route("/")
-  .post(requireStaffAuth, createMember)  // optional; we already have /auth/members/signup
-  .get(requireStaffAuth, getMembers);
+  .post(requireStaffAuth, authorize(["staff", "admin"]), createMember)
+  .get(requireStaffAuth, authorize(["staff", "admin"]), getMembers);
 
 router
   .route("/:id")
-  .get(requireStaffAuth, getMemberById)
-  .put(requireStaffAuth, updateMember)
-  .delete(requireStaffAuth, deleteMember);
+  .delete(requireStaffAuth, authorize(["staff", "admin"]), deleteMember);
 
 export default router;

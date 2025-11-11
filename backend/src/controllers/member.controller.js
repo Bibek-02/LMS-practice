@@ -106,58 +106,72 @@ export const getMemberById = async(req, res, next) => {
 
 /** PUT /api/members/:id */
 export const updateMember = async (req, res, next) => {
-  try{
+  try {
     const { id } = req.params;
     if (!isId(id))
-      return fail (res, "Invalid member id", 400);
+      return fail(res, "Invalid member id", 400);
 
-    if ('password' in req.body) {
-      return fail(res, "Use auth endpoint to change password", 400, {fields: ["password"]});
+    // --- Role/Ownership check ---
+    // Only staff/admin can update others
+    // Members can only update their own profile
+    if (req.user.role === "member" && String(req.user.id) !== String(id)) {
+      return fail(res, "You can only update your own profile", 403);
     }
-    
-    // Build payload from allowed field only.
-    const allowed = ["name", "email", "address", "member_since", "expiry_date","notes"];
+
+    if ("password" in req.body) {
+      return fail(res, "Use auth endpoint to change password", 400, { fields: ["password"] });
+    }
+
+    // Allow different fields depending on role
+    let allowed = ["name", "email", "address", "notes"];
+    if (req.user.role !== "member") {
+      // staff/admin can also modify status/dates
+      allowed.push("member_since", "expiry_date", "active");
+    }
+
+    // Build payload only from allowed fields
     const payload = {};
-    for(const key of allowed) {
-      if(req.body[key] !== undefined) payload[key] = req.body[key];
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) payload[key] = req.body[key];
     }
 
-    //Validate 
+    // Validate & normalize
     if ("name" in payload && !payload.name?.trim())
-      return fail(res, "name must not be empty", 422, {fields: ["name"]});
+      return fail(res, "name must not be empty", 422, { fields: ["name"] });
     if ("email" in payload && !payload.email?.trim())
-      return fail(res, "email must not be empty", 422, {fields:["email"]});
+      return fail(res, "email must not be empty", 422, { fields: ["email"] });
 
-    //Normalize
     if ("name" in payload) payload.name = payload.name.trim();
     if ("email" in payload) payload.email = payload.email.trim().toLowerCase();
 
-    if("email" in payload) {
-      const exists = await Member.findOne({email: payload.email, _id:{$ne: id}}).lean();
-      if (exists) 
-        return fail(res, "Email is already registered", 409, {fields:["email"]})
+    // Ensure email uniqueness
+    if ("email" in payload) {
+      const exists = await Member.findOne({ email: payload.email, _id: { $ne: id } }).lean();
+      if (exists)
+        return fail(res, "Email is already registered", 409, { fields: ["email"] });
     }
 
     const updated = await Member.findByIdAndUpdate(
-      id, 
+      id,
       payload,
-      {new: true, runValidators: true, context: "query"}
+      { new: true, runValidators: true, context: "query" }
     ).lean();
 
-    if(!updated) return fail(res, "Member not found", 404);
+    if (!updated) return fail(res, "Member not found", 404);
 
-    const{_id, __v, password, ...rest} = updated;
-    const safe = {id: String(_id), ...rest};
+    const { _id, __v, password, password_hash, ...rest } = updated;
+    const safe = { id: String(_id), ...rest };
 
-    return ok (res, safe, "Member updated successfully");
-  } catch(err){
-    if(err?.code === 11000 && err?.keyPattern?.email) {
+    return ok(res, safe, "Member updated successfully");
+  } catch (err) {
+    if (err?.code === 11000 && err?.keyPattern?.email) {
       err.status = 409;
       err.message = "Email already exists";
     }
     next(err);
   }
-}
+};
+
 
 /** DELETE /api/members/:id  (?hard=true for hard delete) */
 export const deleteMember = async (req, res, next) => {
