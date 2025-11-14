@@ -182,3 +182,22 @@ export const renewLoan = async (req, res, next) => {
     next(err);
   }
 };
+
+const amount = fineAmount(Loan.due_date, now);
+if (amount > 0) {
+  let fine = await Fine.findOne({loan: Loan_id});
+  if(!fine) {
+    fine = await Fine.create({
+      loan: Loan._id,
+      member: Loan.member,
+      amount,
+      status: "Pending",
+      reason: "Overdue return",
+    });
+  } else if (fine.status === "Pending") {
+    fine.amount = amount;
+    fine.member = Loan.member;
+    await fine.save();
+  }
+  Loan.fine_snapshot = amount;
+}
