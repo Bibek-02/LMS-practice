@@ -10,6 +10,8 @@ import memberAuthRoutes from "./src/routes/auth.member.routes.js";
 import staffAuthRoutes from "./src/routes/auth.staff.routes.js";
 import loanRoutes from "./src/routes/loan.routes.js"
 import fineRoutes from "./src/routes/fine.routes.js";
+import reportRoutes from "./src/routes/reports.routes.js";
+import paymentRoutes from "./src/routes/payment.routes.js";
 
 const app = express();
 app.use(cors());
@@ -23,14 +25,19 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-app.use(notFound);
-app.use(errorHandler);
+
 app.use("/api/books", bookRoutes);
 app.use("/api/members", memberRoutes);
 app.use("/api/auth/member", memberAuthRoutes);
 app.use("/api/auth/staff", staffAuthRoutes);
 app.use("/api/loans", loanRoutes)
 app.use("/api/fines", fineRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/payments", paymentRoutes);
+
+
+app.use(notFound);
+app.use(errorHandler);
 
 
 

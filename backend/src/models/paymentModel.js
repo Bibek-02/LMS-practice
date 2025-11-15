@@ -7,7 +7,7 @@ const paymentSchema = new mongoose.Schema(
         loan:   { type: mongoose.Schema.Types.ObjectId, ref: "Loan", required: true },
         member: { type: mongoose.Schema.Types.ObjectId, ref: "Member", required: true },
         amount: { type: Number, required: true, min: 0 },
-        method: { type: String, enum: ["cash","card","upi","other"], default: "other" },
+        method: { type: String, enum: ["cash","card"], default: "card" },
         status: { type: String, enum: ["Success","Failed"], default: "Success" },
         txn_ref:{ type: String, trim: true },
     },

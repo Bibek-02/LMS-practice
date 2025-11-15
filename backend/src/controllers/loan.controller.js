@@ -82,8 +82,8 @@ export const returnLoan = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // 1) find loan + book
-    const loan = await Loan.findById(id).populate("book");
+    // 1) find loan + book + member (for ownership on Fine)
+    const loan = await Loan.findById(id).populate("book").populate("member");
     if (!loan) return res.status(404).json({ message: "Loan not found" });
 
     if (loan.status === "Returned") {
@@ -97,24 +97,26 @@ export const returnLoan = async (req, res, next) => {
     // 3) compute and upsert fine if overdue
     const amount = fineAmount(loan.due_date, now);
     if (amount > 0) {
-      // upsert a Pending fine unless already Paid/Waived
       let fine = await Fine.findOne({ loan: loan._id });
 
       if (!fine) {
         fine = await Fine.create({
           loan: loan._id,
+          member: loan.member?._id || loan.member, // ensure member is set
           amount,
           status: "Pending",
           reason: "Overdue return",
         });
       } else if (fine.status === "Pending") {
-        fine.amount = amount; // update to latest computed amount
+        fine.amount = amount;
+        // backfill member if missing
+        if (!fine.member) fine.member = loan.member?._id || loan.member;
         await fine.save();
       }
       loan.fine_snapshot = amount;
     }
 
-    // 4) set status to Returned (Overdue status is only for active, unreturned loans)
+    // 4) set status to Returned (Overdue is derived only while active)
     loan.status = "Returned";
     await loan.save();
 
@@ -131,7 +133,7 @@ export const returnLoan = async (req, res, next) => {
           _id: loan._id,
           status: loan.status,
           return_date: loan.return_date,
-          fine_snapshot: loan.fine_snapshot,
+          fine_snapshot: loan.fine_snapshot || 0,
         },
         book: { _id: loan.book?._id, available: loan.book?.available },
       },
