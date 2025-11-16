@@ -8,7 +8,7 @@ import {
   deleteBook
 } from "../controllers/book.controller.js";
 
-import requireStaffAuth from "../middleware/authStaff.js"; // verifies staff/admin JWT
+import {requireStaffAuth} from "../middleware/authStaff.js"; // verifies staff/admin JWT
 import { authorize } from "../middleware/authorize.js";
 
 const router = Router();

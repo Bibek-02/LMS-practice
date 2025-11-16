@@ -6,19 +6,19 @@ import {
   getChartsData,
 } from "../controllers/reports.controller.js";
 
-import authStaff from "../middleware/authStaff.js";
-import authorize from "../middleware/authorize.js";
+import {requireStaffAuth} from "../middleware/authStaff.js";
+import {authorize} from "../middleware/authorize.js";
 
 const router = express.Router();
 
 // Admin-only dashboard metrics
 router.get(
   "/summary-dashboard",
-  authStaff,
+  requireStaffAuth,
   authorize("admin"),
   getSummaryDashboard
 );
 
-router.get("/charts", authStaff, authorize("admin"), getChartsData);
+router.get("/charts", requireStaffAuth, authorize("admin"), getChartsData);
 
 export default router;
