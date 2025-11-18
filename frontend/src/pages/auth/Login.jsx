@@ -1,7 +1,9 @@
+// frontend/src/pages/auth/Login.jsx  
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../api/client";
-import { useAuth } from "../../context/AuthContext";
+import useAuth from "../../hooks/useAuth.js";
+
 
 const Login = () => {
   const [role, setRole] = useState("member"); // member | staff

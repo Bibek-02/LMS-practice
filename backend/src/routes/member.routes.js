@@ -4,12 +4,12 @@ import { requireMemberAuth } from "../middleware/authMember.js";
 import { requireStaffAuth } from "../middleware/authStaff.js";
 import { authorize } from "../middleware/authorize.js";
 import {
-  createMember,
   getMembers,
   getMemberById,
   updateMember,
   deleteMember,
 } from "../controllers/member.controller.js";
+import { memberSignup } from "../controllers/auth.controller.js";
 
 const router = Router();
 
@@ -47,7 +47,7 @@ router
  */
 router
   .route("/")
-  .post(requireStaffAuth, authorize(["staff", "admin"]), createMember)
+  .post(requireStaffAuth, authorize(["staff", "admin"]), memberSignup)
   .get(requireStaffAuth, authorize(["staff", "admin"]), getMembers);
 
 router

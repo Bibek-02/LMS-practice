@@ -1,9 +1,11 @@
+// frontend/src/router/router.jsx 
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import Login from "../pages/auth/Login";
 import MemberDashboard from "../pages/member/MemberDashboard";
 import StaffDashboard from "../pages/staff/StaffDashboard";
 import AdminDashboard from "../pages/admin/AdminDashboard";
-import { useAuth } from "../context/AuthContext";
+import useAuth from "../hooks/useAuth.js";
+
 
 const PrivateRoute = ({ allowedRoles }) => {
   const { token, user } = useAuth();

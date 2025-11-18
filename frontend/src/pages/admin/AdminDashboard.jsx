@@ -1,3 +1,4 @@
+// frontend/src/pages/admin/AdminDashboard.jsx
 const AdminDashboard = () => {
   return (
     <div className="p-6">

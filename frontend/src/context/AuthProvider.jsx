@@ -1,3 +1,4 @@
+// frontend/src/context/AuthProvider.jsx
 import { useState } from "react";
 import AuthContext from "./AuthContext";
 

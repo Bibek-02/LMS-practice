@@ -1,3 +1,4 @@
+// frontend/src/pages/staff/StaffDashboard.jsx
 const StaffDashboard = () => {
   return (
     <div className="p-6">
