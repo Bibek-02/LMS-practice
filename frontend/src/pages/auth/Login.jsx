@@ -22,14 +22,14 @@ const Login = () => {
 
     try {
       const endpoint =
-        role === "member" ? "/auth/members/login" : "/auth/staff/login";
+        role === "member" ? "/auth/member/login" : "/auth/staff/login";
 
       const { data } = await apiClient.post(endpoint, { email, password });
 
       // Expect: { token, profile }
-      login({ token: data.token, profile: data.profile });
-
-      const actualRole = data.profile.role;
+      login({ token: data.data.token, profile: data.data.profile });
+      
+      const actualRole = data.data.profile.role;
 
       if (actualRole === "member") {
         navigate("/member/dashboard", { replace: true });
