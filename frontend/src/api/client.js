@@ -1,6 +1,7 @@
 // frontend/src/api/client.js
 import axios from "axios";
 
+// Create an Axios instance with default configurations
 const apiClient = axios.create({
     baseURL : "http://localhost:3000/api",
     withCredentials: false,
